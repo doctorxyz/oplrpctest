@@ -45,7 +45,7 @@ CHILDPROOF = 0
 
 FRONTEND_OBJS = obj/pad.o obj/fntsys.o obj/renderman.o obj/menusys.o obj/OSDHistory.o obj/system.o obj/lang.o obj/config.o obj/hdd.o obj/dialogs.o \
 		obj/dia.o obj/ioman.o obj/texcache.o obj/themes.o obj/supportbase.o obj/usbsupport.o obj/ethsupport.o obj/hddsupport.o \
-		obj/appsupport.o obj/gui.o obj/textures.o obj/opl.o obj/atlas.o obj/nbns.o obj/httpclient.o
+		obj/appsupport.o obj/gui.o obj/textures.o obj/opl.o obj/atlas.o obj/nbns.o obj/httpclient.o obj/freemem.o
 
 GFX_OBJS =	obj/usb_icon.o obj/hdd_icon.o obj/eth_icon.o obj/app_icon.o \
 		obj/cross_icon.o obj/triangle_icon.o obj/circle_icon.o obj/square_icon.o obj/select_icon.o obj/start_icon.o \
@@ -265,6 +265,8 @@ sclean:
 	$(MAKE) -C modules/debug/ioptrap clean
 	echo " -ps2link"
 	$(MAKE) -C modules/debug/ps2link clean
+	echo " -freemem"
+	$(MAKE) -C modules/freemem clean
 	echo "-pc tools"
 	$(MAKE) -C pc clean
 
@@ -470,6 +472,11 @@ ps2fs.s:
 	echo " -ps2fs"
 	$(MAKE) -C modules/hdd/pfs
 	$(BIN2S) modules/hdd/pfs/ps2fs.irx asm/ps2fs.s ps2fs_irx
+
+freemem.s:
+	echo " -freemem"
+	$(MAKE) -C modules/freemem
+	$(BIN2S) modules/freemem/freemem.irx asm/freemem.s freemem_irx
 
 iomanx.s:
 	$(BIN2S) $(PS2SDK)/iop/irx/iomanX.irx asm/iomanx.s iomanx_irx

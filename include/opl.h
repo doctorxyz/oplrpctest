@@ -160,4 +160,11 @@ unsigned char gDefaultUITextColor[3];
 
 #define MENU_ITEM_HEIGHT 19
 
+//DOCTORXYZ-START
+#define FREEMEM_IRX		0xFEEFAAF0	/*random hopefully unique number for the interface */
+/* function(s) to be called */
+#define FM_CMD_MEMSIZE		1
+#define FM_CMD_MAXFREEMEM	2
+#define FM_CMD_TOTFREEMEM	3
+//DOCTORXYZ-END
 #endif

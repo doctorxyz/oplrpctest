@@ -98,6 +98,15 @@ static VU_VECTOR pgrad3[12] = {{ 1, 1, 0, 1 }, { -1, 1, 0, 1 }, { 1, -1, 0, 1 },
 								{ 1, 0, 1, 1 }, { -1, 0, 1, 1 }, { 1, 0, -1, 1 }, { -1, 0, -1, 1 },
 								{ 0, 1, 1, 1 },	{ 0, -1, 1, 1 }, { 0, 1, -1, 1 }, { 0, -1, -1, 1 } };
 
+//DOCTORXYZ-START
+extern void *freemem_irx;
+extern int size_freemem_irx;
+static SifRpcClientData_t SifRpcClient;
+static int freemem_status = 0;
+static float IOPFreeMem;
+static char text[30];
+//DOCTORXYZ-END
+
 void guiReloadScreenExtents() {
 	rmGetScreenExtents(&screenWidth, &screenHeight);
 }
@@ -1449,6 +1458,26 @@ int guiDrawIconAndText(int iconId, int textId, int font, int x, int y, u64 color
 	return x;
 }
 
+//DOCTORXYZ-START
+int IOPQueryTotalFreeMemSize(void) {
+	static int retVal  __attribute((aligned(64)));
+	// SIF RPC client API -> SifCallRpc params:
+	// ========================================
+	// SifRpcClientData_t *client = SifRpcClient
+	// int rpc_number = 0
+	// int mode = 0
+	// void *send = NULL
+	// int ssize = 0
+	// void *receive = &retVal
+	// int rsize = 4
+	// SifRpcEndFunc_t end_function = 0
+	// void *end_param = 0
+	SifCallRpc(&SifRpcClient, 3, 0, NULL, 0, &retVal, 4, 0, 0);
+	LOG("EE RPC Client Calling \n");
+	return retVal;
+}
+//DOCTORXYZ-END
+
 static void guiDrawOverlays() {
 	// are there any pending operations?
 	int pending = ioHasPendingRequests();
@@ -1465,6 +1494,33 @@ static void guiDrawOverlays() {
 
 	if (bfadeout > 0)
 		guiDrawBusy();
+
+//DOCTORXYZ-START
+	if (freemem_status == 0) {
+		if (sysLoadModuleBuffer(&freemem_irx, size_freemem_irx, 0, NULL) >= 0) {
+			freemem_status = 1;
+			LOG("IOP module (freemem) loaded\n");
+		}
+	}
+	if (freemem_status == 1) {
+		if (SifRpcClient.server==NULL) {
+			while(SifBindRpc(&SifRpcClient, FREEMEM_IRX, 0)<0 || SifRpcClient.server==NULL)
+			{
+				LOG("IOP RPC Server (freemem) bind: failed\n");
+				nopdelay();
+			}
+			LOG("IOP RPC Server (freemem) bind: done\n");
+			freemem_status = 2;
+		}
+	}
+	if (freemem_status == 2) {
+		IOPFreeMem = (float)(IOPQueryTotalFreeMemSize()/(1024.0F*1024.0F));
+		sprintf(text, "IOP Free Memory Size %.2fMB", (float)IOPFreeMem);
+		freemem_status = 3;
+	}
+	if (freemem_status == 3)
+		fntRenderString(gTheme->fonts[0], 0, 30, ALIGN_NONE, 0, 0, text, GS_SETREG_RGBA(0x060, 0x060, 0x060, 0x060));
+//DOCTORXYZ-END
 
 #ifdef __DEBUG
 	// fps meter
